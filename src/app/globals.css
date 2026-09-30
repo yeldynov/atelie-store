@@ -1,26 +1,291 @@
 @import "tailwindcss";
 
+/*
+ * Atelier design system
+ *
+ * Monochrome, image-led, quiet UI: black on white, hairline rules, square
+ * corners, small tightly-tracked body type, uppercase bold labels for actions.
+ * Product media sits on a near-white surface and grids run edge to edge.
+ */
+
+/* ---------- Runtime tokens (responsive values live here) ---------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --gutter: 1rem; /* page side padding */
+  --header-height: 3.5rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@media (width >= 48rem) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --gutter: 1.5rem;
+    --header-height: 4rem;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (width >= 80rem) {
+  :root {
+    --gutter: 3rem;
+  }
+}
+
+/* ---------- Tailwind theme ---------- */
+@theme inline {
+  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+
+  --spacing-gutter: var(--gutter);
+  --spacing-header: var(--header-height);
+}
+
+@theme {
+  /* Color: strict monochrome, one accent for errors/sale only */
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-ink: #000000;
+  --color-paper: #ffffff;
+  --color-surface: #fbfbfb; /* product media backdrop */
+  --color-subtle: #f2f2f2; /* hover fills, skeletons */
+  --color-muted: #6b6b6b; /* secondary text, 5.3:1 on paper */
+  --color-line: #e5e5e5; /* hairline dividers */
+  --color-line-strong: #000000;
+  --color-disabled: #b3b3b3;
+  --color-error: #b3261e;
+  --color-overlay: rgb(0 0 0 / 0.5);
+
+  /* Legacy aliases from the Next template */
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+
+  /* Type scale: small UI text, light large display, slight negative tracking */
+  --text-2xs: 0.5625rem; /* badges */
+  --text-2xs--line-height: 0.75rem;
+  --text-xs: 0.75rem; /* default UI / product copy */
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 2rem;
+  --text-2xl: 2rem; /* section titles */
+  --text-2xl--line-height: 2.5rem;
+  --text-3xl: 3rem;
+  --text-3xl--line-height: 3.25rem;
+  --text-4xl: 4.5rem; /* hero display */
+  --text-4xl--line-height: 4.5rem;
+
+  --tracking-tight: -0.03em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-widest: 0.3em; /* wordmark */
+
+  /* Containers */
+  --container-prose: 40rem;
+  --container-content: 90rem;
+
+  /* No rounding anywhere except explicit pills/icons */
+  --radius-none: 0;
+  --radius-full: 9999px;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --default-transition-duration: 200ms;
+  --default-transition-timing-function: var(--ease-standard);
+}
+
+/* ---------- Base ---------- */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    scroll-padding-top: var(--header-height);
+  }
+
+  body {
+    @apply bg-paper font-sans text-xs font-medium tracking-tight text-ink;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-light tracking-tight text-balance;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  img,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+
+  hr {
+    @apply border-line;
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    @apply bg-ink text-paper;
+  }
+}
+
+/* ---------- Typography primitives ---------- */
+@utility text-display {
+  @apply text-3xl font-light tracking-tight md:text-4xl;
+}
+
+@utility text-title {
+  @apply text-xl font-light tracking-tight md:text-2xl;
+}
+
+/* Uppercase bold label: buttons, active tabs, section eyebrows */
+@utility text-label {
+  @apply text-xs font-bold tracking-normal uppercase;
+}
+
+@utility text-caption {
+  @apply text-2xs font-medium tracking-tight;
+}
+
+@utility wordmark {
+  @apply text-lg font-normal tracking-widest uppercase md:text-xl;
+}
+
+/* ---------- Layout primitives ---------- */
+
+/* Standard page container: gutter padding, capped width */
+@utility container-page {
+  @apply mx-auto w-full max-w-content px-gutter;
+}
+
+/* Full-bleed band with gutter padding only (headers, filter bars) */
+@utility container-bleed {
+  @apply w-full px-gutter;
+}
+
+@utility container-prose {
+  @apply mx-auto w-full max-w-prose px-gutter;
+}
+
+/* Vertical rhythm for page sections */
+@utility section {
+  @apply py-12 md:py-20;
+}
+
+/* Edge-to-edge product grid: 2 → 3 → 4 columns, 1px gaps read as hairlines */
+@utility grid-products {
+  @apply grid grid-cols-2 gap-px bg-paper md:grid-cols-3 lg:grid-cols-4;
+}
+
+/* A grid item spanning a 2×2 editorial slot */
+@utility tile-feature {
+  @apply col-span-2 row-span-2;
+}
+
+/* Square product media on the neutral surface */
+@utility media-product {
+  @apply relative aspect-square w-full overflow-hidden bg-surface;
+
+  & > img {
+    @apply size-full object-cover;
+  }
+}
+
+/* Portrait editorial media */
+@utility media-editorial {
+  @apply relative aspect-3/4 w-full overflow-hidden bg-subtle;
+
+  & > img,
+  & > video {
+    @apply size-full object-cover;
+  }
+}
+
+/* Horizontally scrolling row (category tabs on mobile) */
+@utility scroll-row {
+  @apply flex snap-x gap-6 overflow-x-auto whitespace-nowrap;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  & > * {
+    @apply snap-start;
+  }
+}
+
+/* Sticky top bar with hairline bottom rule */
+@utility bar-header {
+  @apply sticky top-0 z-40 flex h-header items-center border-b border-line bg-paper;
+}
+
+@utility divider {
+  @apply border-t border-line;
+}
+
+/* ---------- Buttons ---------- */
+@utility btn {
+  @apply inline-flex h-12 items-center justify-center gap-2 border px-6 text-label transition-colors select-none;
+
+  &:disabled,
+  &[aria-disabled="true"] {
+    @apply pointer-events-none border-disabled bg-paper text-disabled;
+  }
+}
+
+@utility btn-primary {
+  @apply border-ink bg-ink text-paper hover:bg-paper hover:text-ink;
+}
+
+@utility btn-secondary {
+  @apply border-ink bg-paper text-ink hover:bg-ink hover:text-paper;
+}
+
+/* Text-only action (e.g. "Filter and sort") */
+@utility btn-ghost {
+  @apply h-auto border-transparent px-0 hover:underline hover:underline-offset-4;
+}
+
+@utility btn-sm {
+  @apply h-9 px-4;
+}
+
+@utility btn-block {
+  @apply w-full;
+}
+
+/* Square icon button (bag, account, search) */
+@utility btn-icon {
+  @apply inline-flex size-10 items-center justify-center transition-opacity hover:opacity-60;
+}
+
+/* ---------- Links ---------- */
+
+/* Inline text link: always underlined */
+@utility link {
+  @apply underline decoration-1 underline-offset-4 transition-opacity hover:opacity-60;
+}
+
+/* Navigation link: underline only on hover / current page */
+@utility link-nav {
+  @apply decoration-1 underline-offset-4 hover:underline aria-[current=page]:font-bold aria-[current=page]:uppercase;
+}
+
+@utility link-muted {
+  @apply text-muted transition-colors hover:text-ink;
 }

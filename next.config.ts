@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    // Catalog and campaign imagery (src/db/seed-data.ts, src/lib/catalog.ts)
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/photo-**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
