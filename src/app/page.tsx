@@ -10,7 +10,7 @@ import {
   newArrivalSlugs,
   story,
 } from "@/lib/catalog";
-import { getProductsBySlugs } from "@/lib/product-queries";
+import { getCategories, getProductsBySlugs } from "@/lib/product-queries";
 
 // Re-read the catalog (prices, stock) at most once a minute.
 export const revalidate = 60;
@@ -31,10 +31,16 @@ const services = [
 ];
 
 export default async function Home() {
-  const [newArrivals, productsFocus] = await Promise.all([
+  const [newArrivals, productsFocus, categories] = await Promise.all([
     getProductsBySlugs(newArrivalSlugs),
     getProductsBySlugs(focusSlugs),
+    getCategories(),
   ]);
+  const categoryNames = new Map(categories.map((c) => [c.slug, c.name]));
+  const featuredCollections = collections.flatMap((collection) => {
+    const title = categoryNames.get(collection.categorySlug);
+    return title ? [{ ...collection, title }] : [];
+  });
 
   return (
     <>
@@ -54,7 +60,7 @@ export default async function Home() {
           <h1 className="text-display max-w-3xl">{hero.title}</h1>
           <p className="max-w-md text-sm">{hero.description}</p>
           <div className="mt-2 flex flex-wrap items-center gap-6">
-            <Link href="/collections/new-season" className="btn btn-secondary">
+            <Link href="/new" className="btn btn-secondary">
               Shop the collection
             </Link>
             <Link href="/stories/the-quiet-season" className="link text-label">
@@ -72,10 +78,10 @@ export default async function Home() {
           </h2>
         </div>
         <ul className="grid gap-px md:grid-cols-3">
-          {collections.map((collection) => (
-            <li key={collection.slug}>
+          {featuredCollections.map((collection) => (
+            <li key={collection.categorySlug}>
               <Link
-                href={`/collections/${collection.slug}`}
+                href={`/collections/${collection.categorySlug}`}
                 className="group relative block"
               >
                 <div className="media-editorial">

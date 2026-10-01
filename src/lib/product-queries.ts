@@ -1,13 +1,13 @@
 import "server-only";
 
-import { asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { asc, desc, eq, exists, inArray, ne, sql } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db";
-import { products, productStock } from "@/db/schema";
+import { categories, products, productStock } from "@/db/schema";
 import type { Product } from "./products";
 
 const withRelations = {
-  category: { columns: { name: true } },
+  category: { columns: { slug: true, name: true } },
   stock: {
     columns: { size: true, quantity: true },
     orderBy: asc(productStock.position),
@@ -30,6 +30,7 @@ function toProduct(row: ProductRow): Product {
     slug: row.slug,
     name: row.name,
     category: row.category.name,
+    categorySlug: row.category.slug,
     price: row.priceCents,
     badge: row.badge ?? undefined,
     images: row.images,
@@ -60,6 +61,53 @@ export async function getProductSlugs() {
   const rows = await db.select({ slug: products.slug }).from(products);
   return rows.map((row) => row.slug);
 }
+
+/** Most recently added first; id breaks ties within one insert. */
+export async function getNewArrivals(limit = 24) {
+  const rows = await db.query.products.findMany({
+    with: withRelations,
+    orderBy: [desc(products.createdAt), desc(products.id)],
+    limit,
+  });
+  return rows.map(toProduct);
+}
+
+/**
+ * Categories that have at least one product, by name. Deduplicated per
+ * request, so the header and the homepage share one query.
+ */
+export const getCategories = cache(async () => {
+  return db
+    .select({ slug: categories.slug, name: categories.name })
+    .from(categories)
+    .where(
+      exists(
+        db
+          .select({ id: products.id })
+          .from(products)
+          .where(eq(products.categoryId, categories.id)),
+      ),
+    )
+    .orderBy(asc(categories.name));
+});
+
+export async function getCategorySlugs() {
+  const rows = await db.select({ slug: categories.slug }).from(categories);
+  return rows.map((row) => row.slug);
+}
+
+/** Deduplicated per request, so metadata and the page share one query. */
+export const getCategory = cache(async (slug: string) => {
+  const row = await db.query.categories.findFirst({
+    where: eq(categories.slug, slug),
+    columns: { name: true },
+    with: {
+      products: { with: withRelations, orderBy: asc(products.id) },
+    },
+  });
+  if (!row) return undefined;
+  return { name: row.name, products: row.products.map(toProduct) };
+});
 
 /** Same category first, then everything else, excluding the product itself. */
 export async function getRelatedProducts(slug: string, limit = 4) {

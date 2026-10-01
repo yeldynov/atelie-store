@@ -96,7 +96,11 @@ export default async function ProductPage(
                 </Link>
               </li>
               <li aria-hidden="true">/</li>
-              <li>{product.category}</li>
+              <li>
+                <Link href={`/collections/${product.categorySlug}`} className="link-muted">
+                  {product.category}
+                </Link>
+              </li>
               <li aria-hidden="true">/</li>
               <li aria-current="page" className="text-ink">
                 {product.name}

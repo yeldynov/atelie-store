@@ -14,6 +14,8 @@ export type Product = {
   slug: string;
   name: string;
   category: string;
+  // Links to /collections/[categorySlug].
+  categorySlug: string;
   // In cents.
   price: number;
   badge?: string;

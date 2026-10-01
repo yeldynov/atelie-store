@@ -1,8 +1,19 @@
 import Link from "next/link";
-import { navigation } from "@/lib/catalog";
+import { getCategories } from "@/lib/product-queries";
 import { AccountIcon, BagIcon, SearchIcon } from "./icons";
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  // One link per category that has products, between the fixed entries.
+  const categories = await getCategories();
+  const navigation = [
+    { label: "New in", href: "/new" },
+    ...categories.map((category) => ({
+      label: category.name,
+      href: `/collections/${category.slug}`,
+    })),
+    { label: "Gifts", href: "/gifts" },
+  ];
+
   return (
     <>
       <div className="flex h-9 items-center justify-center bg-ink px-gutter text-center text-paper">
@@ -35,7 +46,7 @@ export function SiteHeader() {
         </div>
 
         <nav aria-label="Main" className="container-bleed">
-          <ul className="scroll-row h-11 items-center md:justify-center md:gap-8">
+          <ul className="scroll-row h-11 items-center md:justify-center-safe md:gap-8">
             {navigation.map((item) => (
               <li key={item.href}>
                 <Link href={item.href} className="link-nav text-label">

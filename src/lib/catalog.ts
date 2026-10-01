@@ -3,9 +3,10 @@
 
 import { unsplash } from "./products";
 
+// Editorial tile for a category collection; the title comes from the
+// category in the database, and tiles for missing categories are skipped.
 export type Collection = {
-  slug: string;
-  title: string;
+  categorySlug: string;
   description: string;
   image: string;
   imageAlt: string;
@@ -22,23 +23,20 @@ export const hero = {
 
 export const collections: Collection[] = [
   {
-    slug: "women",
-    title: "Women",
-    description: "Fluid dresses and knitwear for the new season.",
+    categorySlug: "ready-to-wear",
+    description: "Fluid pieces for the new season.",
     image: unsplash("1496747611176-843222e1e57c"),
     imageAlt: "Woman in a floral wrap dress by the sea",
   },
   {
-    slug: "men",
-    title: "Men",
+    categorySlug: "tailoring",
     description: "Tailoring cut close, in deep navy wool.",
     image: unsplash("1617137968427-85924c800a22"),
     imageAlt: "Man in a navy suit",
   },
   {
-    slug: "accessories",
-    title: "Accessories",
-    description: "Eyewear, leather gloves and the bags to carry them.",
+    categorySlug: "eyewear",
+    description: "Round metal frames for bright winter days.",
     image: unsplash("1483985988355-763728e1935b"),
     imageAlt: "Woman in sunglasses and leather gloves carrying shopping bags",
   },
@@ -60,7 +58,7 @@ export const newArrivalSlugs = [
 export const gridFeature = {
   title: "Leather, reconsidered",
   description: "Supple lambskin outerwear, cut sharp.",
-  href: "/collections/leather",
+  href: "/collections/outerwear",
   image: unsplash("1520975954732-35dd22299614"),
   imageAlt: "Man in a black leather jacket crouching on a rooftop",
 };
@@ -78,15 +76,4 @@ export const focusSlugs = [
   "layered-pendant-necklace",
   "satin-jogger",
   "tailored-wool-suit",
-];
-
-export const navigation = [
-  { label: "New in", href: "/new" },
-  { label: "Women", href: "/collections/women" },
-  { label: "Men", href: "/collections/men" },
-  { label: "Bags", href: "/collections/bags" },
-  { label: "Shoes", href: "/collections/shoes" },
-  { label: "Accessories", href: "/collections/accessories" },
-  { label: "Jewellery", href: "/collections/jewellery" },
-  { label: "Gifts", href: "/gifts" },
 ];
