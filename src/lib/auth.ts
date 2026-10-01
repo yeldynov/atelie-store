@@ -14,6 +14,32 @@ if (process.env.NODE_ENV === "production" && (!secret || secret.length < 32)) {
 export const auth = betterAuth({
   secret,
   database: drizzleAdapter(db, { provider: "pg" }),
+  emailAndPassword: {
+    enabled: true,
+    minPasswordLength: 8,
+    autoSignIn: true,
+  },
+  user: {
+    additionalFields: {
+      // "customer" or "admin". input: false keeps it out of sign-up requests;
+      // promote with `pnpm auth:make-admin <email>`.
+      role: {
+        type: "string",
+        required: false,
+        defaultValue: "customer",
+        input: false,
+      },
+    },
+  },
+  // No cookie cache: every session read hits the database, so sign-outs and
+  // role changes take effect on the next request.
+  session: {
+    expiresIn: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 24,
+  },
+  rateLimit: { enabled: true },
   // nextCookies must stay last so it can set cookies from server actions.
   plugins: [nextCookies()],
 });
+
+export type Session = typeof auth.$Infer.Session;

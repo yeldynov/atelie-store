@@ -16,6 +16,7 @@ pnpm build          # production build (needs DATABASE_URL set, see below)
 pnpm lint           # ESLint (flat config, eslint-config-next)
 pnpm typecheck      # tsc --noEmit
 pnpm auth:generate  # regenerate Better Auth tables into src/db/schema/auth.ts
+pnpm auth:make-admin <email> [--revoke]  # set a user's role (admin/customer)
 pnpm db:generate    # create SQL migration in ./drizzle from schema changes
 pnpm db:migrate     # apply migrations
 pnpm db:push        # push schema directly — don't use; see Database conventions
@@ -32,6 +33,13 @@ Setup: copy `.env.example` to `.env` and fill in `DATABASE_URL` (Neon pooled con
 - **Database** (`src/db/`): `index.ts` exports a single `db` built with the `drizzle-orm/neon-http` driver and the full schema, and throws at import time if `DATABASE_URL` is missing — so anything that imports `@/db` (including the auth module and the auth route) fails without it. The HTTP driver is stateless and does not support interactive `db.transaction()`; use `db.batch()` or switch to the WebSocket driver if transactions are needed.
 - **Auth**: `src/lib/auth.ts` is the server-side Better Auth instance (Drizzle adapter, `pg` provider) — use `auth.api.*` in server components, route handlers, and server actions. Keep `nextCookies()` as the last plugin so server actions can set cookies. `src/lib/auth-client.ts` is the React client for client components. All `/api/auth/*` requests are handled by `src/app/api/auth/[...all]/route.ts`. When adding Better Auth plugins or options that change tables, re-run `pnpm auth:generate`, then `db:generate`/`db:migrate`.
 - Import alias `@/*` maps to `src/*`.
+
+## Auth conventions
+
+- Email/password only, with database sessions (30 days, no cookie cache), so sign-out and role changes apply on the next request.
+- `src/lib/session.ts` (`server-only`) is the auth DAL. Every protected page calls `requireUser(returnTo)` or `requireAdmin()` itself. Every admin server action, route handler, or admin-only query calls `assertAdmin()` first (see `src/lib/admin-queries.ts`). Never rely on layouts or `src/proxy.ts` for protection: the proxy only redirects requests that have no session cookie at all.
+- Sign-in, sign-up, and sign-out are server actions in `src/app/(auth)/actions.ts` calling `auth.api.*`. Redirect targets from `?next=` go through `safeNext`.
+- Roles: `user.role` is `customer` (default) or `admin`. It is `input: false`, so clients can't set it. Change it only with `pnpm auth:make-admin <email> [--revoke]`.
 
 ## Database conventions
 
