@@ -33,9 +33,9 @@ export async function SiteHeader() {
           </Link>
 
           <div className="-mr-2.5 flex items-center justify-end">
-            <button type="button" className="btn-icon" aria-label="Search">
+            <Link href="/search" className="btn-icon" aria-label="Search">
               <SearchIcon />
-            </button>
+            </Link>
             <Link href="/account" className="btn-icon" aria-label="My account">
               <AccountIcon />
             </Link>

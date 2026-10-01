@@ -1,6 +1,17 @@
 import "server-only";
 
-import { asc, desc, eq, exists, inArray, ne, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  ilike,
+  inArray,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/db";
 import { categories, products, productStock } from "@/db/schema";
@@ -108,6 +119,47 @@ export const getCategory = cache(async (slug: string) => {
   if (!row) return undefined;
   return { name: row.name, products: row.products.map(toProduct) };
 });
+
+const escapeLike = (value: string) => value.replace(/[\\%_]/g, "\\$&");
+
+/**
+ * Products where every word of the query appears in the name, category or
+ * description, case-insensitively. Name matches first, then catalog order.
+ */
+export async function searchProducts(query: string, limit = 48) {
+  const terms = query.trim().split(/\s+/).filter(Boolean).slice(0, 8);
+  if (terms.length === 0) return [];
+
+  const matchesTerm = (term: string) => {
+    const pattern = `%${escapeLike(term)}%`;
+    return or(
+      ilike(products.name, pattern),
+      ilike(products.description, pattern),
+      exists(
+        db
+          .select({ id: categories.id })
+          .from(categories)
+          .where(
+            and(
+              eq(categories.id, products.categoryId),
+              ilike(categories.name, pattern),
+            ),
+          ),
+      ),
+    );
+  };
+  const nameMatches = and(
+    ...terms.map((term) => ilike(products.name, `%${escapeLike(term)}%`)),
+  );
+
+  const rows = await db.query.products.findMany({
+    where: and(...terms.map(matchesTerm)),
+    with: withRelations,
+    orderBy: [desc(sql`coalesce(${nameMatches}, false)`), asc(products.id)],
+    limit,
+  });
+  return rows.map(toProduct);
+}
 
 /** Same category first, then everything else, excluding the product itself. */
 export async function getRelatedProducts(slug: string, limit = 4) {
