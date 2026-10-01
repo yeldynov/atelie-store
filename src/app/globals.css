@@ -274,6 +274,13 @@
   @apply inline-flex size-10 items-center justify-center transition-opacity hover:opacity-60;
 }
 
+/* ---------- Form fields ---------- */
+
+/* Single-line text input on a bottom rule, matching the search field */
+@utility field-input {
+  @apply h-12 w-full border-b border-ink bg-transparent text-sm placeholder:text-disabled focus:border-b-2 focus:outline-none aria-invalid:border-error disabled:border-disabled disabled:text-muted read-only:text-muted;
+}
+
 /* ---------- Links ---------- */
 
 /* Inline text link: always underlined */

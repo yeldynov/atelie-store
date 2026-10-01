@@ -8,6 +8,13 @@
       "when": 1790756734503,
       "tag": "0000_powerful_vision",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790848101193,
+      "tag": "0001_better_auth",
+      "breakpoints": true
     }
   ]
 }
