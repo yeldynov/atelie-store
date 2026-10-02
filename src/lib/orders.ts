@@ -308,4 +308,37 @@ export async function getUnpaidPendingOrders(userId: string) {
   });
 }
 
+// Orders the customer actually placed: payment completed, settling, or
+// declined. Open and abandoned checkouts (pending or cancelled while unpaid)
+// are not shown in their history.
+const placedOrder = inArray(orders.paymentStatus, ["paid", "processing", "failed"]);
+
+/** The user's placed orders, newest first, for their order history. */
+export async function getOrdersForUser(userId: string) {
+  return db.query.orders.findMany({
+    where: and(eq(orders.userId, userId), placedOrder),
+    columns: {
+      id: true,
+      paymentStatus: true,
+      totalCents: true,
+      createdAt: true,
+    },
+    with: { items: { columns: { quantity: true } } },
+    orderBy: desc(orders.createdAt),
+  });
+}
+
+/** One of the user's placed orders, with its lines. Undefined for anyone else's. */
+export async function getOrderForUser(orderId: string, userId: string) {
+  if (!isOrderId(orderId)) return undefined;
+  return db.query.orders.findFirst({
+    where: and(eq(orders.id, orderId), eq(orders.userId, userId), placedOrder),
+    with: { items: { orderBy: asc(orderItems.id) } },
+  });
+}
+
 export type Order = NonNullable<Awaited<ReturnType<typeof getOrderBySessionForUser>>>;
+export type OrderStatus = Order["status"];
+export type PaymentStatus = Order["paymentStatus"];
+
+export const formatOrderNumber = (orderId: string) => `#${orderId.slice(0, 8).toUpperCase()}`;

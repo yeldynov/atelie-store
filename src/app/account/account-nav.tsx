@@ -5,7 +5,14 @@ import { usePathname } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { signOut } from "@/app/(auth)/actions";
 
-const links = [{ label: "Account details", href: "/account" }];
+const links = [
+  { label: "Account details", href: "/account" },
+  { label: "Orders", href: "/account/orders" },
+];
+
+// "/account" is current only on itself; sections also on their sub-pages.
+const isCurrent = (pathname: string, href: string) =>
+  pathname === href || (href !== "/account" && pathname.startsWith(`${href}/`));
 
 // Section navigation: a scrolling tab row on mobile, a sidebar from md up.
 export function AccountNav({ showAdmin }: { showAdmin: boolean }) {
@@ -22,7 +29,7 @@ export function AccountNav({ showAdmin }: { showAdmin: boolean }) {
           <li key={item.href}>
             <Link
               href={item.href}
-              aria-current={pathname === item.href ? "page" : undefined}
+              aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
               className="link-nav text-label"
             >
               {item.label}
