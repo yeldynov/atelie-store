@@ -1,7 +1,7 @@
 "use server";
 
 import { lineKey, MAX_LINES, MAX_QUANTITY, type Bag, type BagLine } from "@/lib/bag";
-import { readBag, resolveBag, writeBag } from "@/lib/bag-store";
+import { readBag, resolveCustomerBag, writeBag } from "@/lib/bag-store";
 import { getProduct } from "@/lib/product-queries";
 import { ONE_SIZE } from "@/lib/products";
 
@@ -15,7 +15,7 @@ export type BagActionResult = { ok: true; bag: Bag } | { ok: false; error: strin
 
 async function save(lines: BagLine[]): Promise<BagActionResult> {
   await writeBag(lines);
-  return { ok: true, bag: await resolveBag(lines) };
+  return { ok: true, bag: await resolveCustomerBag(lines) };
 }
 
 const fail = (error: string): BagActionResult => ({ ok: false, error });

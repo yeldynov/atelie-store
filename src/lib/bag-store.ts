@@ -5,12 +5,15 @@ import { cache } from "react";
 import {
   MAX_QUANTITY,
   bagSubtotal,
+  lineKey,
   parseBagCookie,
   type Bag,
   type BagItem,
   type BagLine,
 } from "./bag";
+import { getUnpaidPendingOrders } from "./orders";
 import { getProductsBySlugs } from "./product-queries";
+import { getSession } from "./session";
 
 // The bag is a cookie of { slug, size, quantity } references. Prices and stock
 // always come from the database, so the cookie is untrusted input only.
@@ -38,11 +41,43 @@ export async function writeBag(lines: BagLine[]) {
   });
 }
 
-/** The bag in the request cookie, resolved. Deduplicated per request. */
-export const getBag = cache(async () => resolveBag(await readBag()));
+/**
+ * The signed-in customer's unfinished checkouts (stock reserved, not paid),
+ * newest first. Deduplicated per request.
+ */
+export const getCheckoutsInProgress = cache(async () => {
+  const session = await getSession();
+  return session ? getUnpaidPendingOrders(session.user.id) : [];
+});
 
-/** Resolves bag lines against current prices and stock. */
-export async function resolveBag(lines: BagLine[]): Promise<Bag> {
+/** The bag in the request cookie, resolved. Deduplicated per request. */
+export const getBag = cache(async () => resolveCustomerBag(await readBag()));
+
+/** Resolves the customer's bag lines, counting stock their checkout holds. */
+export async function resolveCustomerBag(lines: BagLine[]): Promise<Bag> {
+  if (lines.length === 0) return resolveBag(lines);
+
+  // Units the customer's own unfinished checkout holds are still theirs, so
+  // they count as available; otherwise going back from Stripe would show
+  // their own items as sold out.
+  const held = new Map<string, number>();
+  for (const order of await getCheckoutsInProgress()) {
+    for (const item of order.items) {
+      const key = lineKey(item.productSlug, item.size);
+      held.set(key, (held.get(key) ?? 0) + item.quantity);
+    }
+  }
+  return resolveBag(lines, held);
+}
+
+/**
+ * Resolves bag lines against current prices and stock. `held` adds units
+ * reserved by the customer's own unfinished checkouts, by lineKey.
+ */
+export async function resolveBag(
+  lines: BagLine[],
+  held: ReadonlyMap<string, number> = new Map(),
+): Promise<Bag> {
   const products = await getProductsBySlugs([
     ...new Set(lines.map((line) => line.slug)),
   ]);
@@ -50,8 +85,10 @@ export async function resolveBag(lines: BagLine[]): Promise<Bag> {
 
   const items = lines.map((line): BagItem => {
     const product = bySlug.get(line.slug);
-    const available =
-      product?.stock.find((s) => s.size === line.size)?.quantity ?? 0;
+    const stock = product?.stock.find((s) => s.size === line.size);
+    const available = stock
+      ? stock.quantity + (held.get(lineKey(line.slug, line.size)) ?? 0)
+      : 0;
     const effectiveQuantity = Math.min(line.quantity, available);
     const unitPrice = product?.price ?? 0;
     return {
