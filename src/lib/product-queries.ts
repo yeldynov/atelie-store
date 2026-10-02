@@ -120,7 +120,7 @@ export const getCategory = cache(async (slug: string) => {
   return { name: row.name, products: row.products.map(toProduct) };
 });
 
-const escapeLike = (value: string) => value.replace(/[\\%_]/g, "\\$&");
+export const escapeLike = (value: string) => value.replace(/[\\%_]/g, "\\$&");
 
 /**
  * Products where every word of the query appears in the name, category or

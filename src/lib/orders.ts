@@ -26,12 +26,21 @@ export type CancelReason = NonNullable<(typeof orders.$inferSelect)["cancelReaso
 const RESERVATION_MS = 31 * 60 * 1000;
 
 /** The Postgres error code of a failed query, if any (drizzle wraps it). */
-function pgErrorCode(error: unknown): string | undefined {
+export function pgErrorCode(error: unknown): string | undefined {
   for (let e = error; e instanceof Error; e = e.cause) {
     const code = (e as { code?: unknown }).code;
     if (typeof code === "string" && /^[0-9A-Z]{5}$/.test(code)) return code;
   }
   return undefined;
+}
+
+/**
+ * Whether a query failed on a foreign key: 23503 when a row points at nothing,
+ * 23001 when deleting a row that an ON DELETE RESTRICT key still points at.
+ */
+export function isForeignKeyViolation(error: unknown) {
+  const code = pgErrorCode(error);
+  return code === "23503" || code === "23001";
 }
 
 export type PendingOrder = {
