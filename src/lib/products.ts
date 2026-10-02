@@ -52,11 +52,13 @@ export const stockLabel: Record<StockStatus, string> = {
   out_of_stock: "Sold out",
 };
 
-const currency = new Intl.NumberFormat("en-US", {
+const wholeDollars = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
   maximumFractionDigits: 0,
 });
+const withCents = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
-/** Formats an amount in cents. */
-export const formatPrice = (cents: number) => currency.format(cents / 100);
+/** Formats an amount in cents: "$1,250", or "$149.50" when there are cents. */
+export const formatPrice = (cents: number) =>
+  (cents % 100 === 0 ? wholeDollars : withCents).format(cents / 100);
