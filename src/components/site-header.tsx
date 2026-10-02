@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { getCategories } from "@/lib/product-queries";
 import { AccountMenu } from "./account-menu";
-import { BagIcon, SearchIcon } from "./icons";
+import { BagMenu } from "./bag-menu";
+import { SearchIcon } from "./icons";
 
 export async function SiteHeader() {
   // One link per category that has products, between the fixed entries.
@@ -38,9 +39,7 @@ export async function SiteHeader() {
               <SearchIcon />
             </Link>
             <AccountMenu />
-            <Link href="/bag" className="btn-icon" aria-label="Shopping bag">
-              <BagIcon />
-            </Link>
+            <BagMenu />
           </div>
         </div>
 

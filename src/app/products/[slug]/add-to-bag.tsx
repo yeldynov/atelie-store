@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useState, useTransition } from "react";
+import { addToBag } from "@/app/bag/actions";
+import { setBag } from "@/lib/bag-client";
 import type { StockStatus } from "@/lib/products";
 
 export type SizeOption = {
@@ -10,14 +13,15 @@ export type SizeOption = {
 };
 
 type Props = {
+  slug: string;
   productName: string;
   sizes: SizeOption[];
   oneSize: boolean;
 };
 
-// Size selection and the add-to-bag action. The bag itself isn't built yet,
-// so adding only confirms the selection on the page.
-export function AddToBag({ productName, sizes, oneSize }: Props) {
+// Size selection and the add-to-bag action. Stock shown here can be up to a
+// minute old; the server action re-checks it and reports any shortfall.
+export function AddToBag({ slug, productName, sizes, oneSize }: Props) {
   const available = sizes.filter((size) => size.status !== "out_of_stock");
   const soldOut = available.length === 0;
 
@@ -26,6 +30,8 @@ export function AddToBag({ productName, sizes, oneSize }: Props) {
   );
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const [added, setAdded] = useState(false);
+  const [pending, startTransition] = useTransition();
 
   const selectedSize = sizes.find((size) => size.label === selected);
 
@@ -35,12 +41,25 @@ export function AddToBag({ productName, sizes, oneSize }: Props) {
       setMessage("Please select a size.");
       return;
     }
-    setError(false);
-    setMessage(
-      oneSize
-        ? `${productName} added to your bag.`
-        : `${productName}, size ${selectedSize.label}, added to your bag.`,
-    );
+    const size = selectedSize.label;
+    setMessage(null);
+    setAdded(false);
+    startTransition(async () => {
+      const result = await addToBag(slug, size, 1);
+      if (!result.ok) {
+        setError(true);
+        setMessage(result.error);
+        return;
+      }
+      setBag(result.bag);
+      setError(false);
+      setAdded(true);
+      setMessage(
+        oneSize
+          ? `${productName} added to your bag.`
+          : `${productName}, size ${size}, added to your bag.`,
+      );
+    });
   }
 
   return (
@@ -69,6 +88,7 @@ export function AddToBag({ productName, sizes, oneSize }: Props) {
                   onClick={() => {
                     setSelected(size.label);
                     setError(false);
+                    setAdded(false);
                     setMessage(null);
                   }}
                   className={[
@@ -104,8 +124,9 @@ export function AddToBag({ productName, sizes, oneSize }: Props) {
           type="button"
           className="btn btn-primary btn-block"
           onClick={handleAdd}
+          disabled={pending}
         >
-          Add to bag
+          {pending ? "Adding…" : "Add to bag"}
         </button>
       )}
 
@@ -115,6 +136,14 @@ export function AddToBag({ productName, sizes, oneSize }: Props) {
         className={error ? "text-error" : "text-ink"}
       >
         {message}
+        {added && (
+          <>
+            {" "}
+            <Link href="/bag" className="link">
+              View bag
+            </Link>
+          </>
+        )}
       </p>
     </div>
   );
