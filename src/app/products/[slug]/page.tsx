@@ -131,7 +131,7 @@ export default async function ProductPage(
           <p className="mt-6 max-w-md text-sm text-muted">{product.description}</p>
 
           <div className="mt-8">
-            <AddToBag productName={product.name} sizes={sizes} oneSize={oneSize} />
+            <AddToBag slug={product.slug} productName={product.name} sizes={sizes} oneSize={oneSize} />
           </div>
 
           <div className="mt-6 border-b border-line">

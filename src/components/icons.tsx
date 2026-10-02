@@ -53,3 +53,19 @@ export function ArrowIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function MinusIcon(props: IconProps) {
+  return (
+    <Icon width="14" height="14" {...props}>
+      <path d="M5 12h14" />
+    </Icon>
+  );
+}
+
+export function PlusIcon(props: IconProps) {
+  return (
+    <Icon width="14" height="14" {...props}>
+      <path d="M5 12h14M12 5v14" />
+    </Icon>
+  );
+}
