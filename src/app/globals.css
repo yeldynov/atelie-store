@@ -281,6 +281,11 @@
   @apply h-12 w-full border-b border-ink bg-transparent text-sm placeholder:text-disabled focus:border-b-2 focus:outline-none aria-invalid:border-error disabled:border-disabled disabled:text-muted read-only:text-muted;
 }
 
+/* Multi-line counterpart of field-input */
+@utility field-textarea {
+  @apply min-h-28 w-full resize-y border-b border-ink bg-transparent py-3 text-sm placeholder:text-disabled focus:border-b-2 focus:outline-none aria-invalid:border-error;
+}
+
 /* ---------- Links ---------- */
 
 /* Inline text link: always underlined */
