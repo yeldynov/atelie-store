@@ -109,6 +109,11 @@ export function AccountMenu() {
                     Account details
                   </Link>
                 </li>
+                <li>
+                  <Link href="/account/orders" className="link-nav">
+                    Orders
+                  </Link>
+                </li>
                 {user.role === "admin" && (
                   <li>
                     <Link href="/admin" className="link-nav">
