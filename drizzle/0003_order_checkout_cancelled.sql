@@ -1,0 +1,1 @@
+ALTER TYPE "public"."order_cancel_reason" ADD VALUE 'checkout_cancelled';
